@@ -1,0 +1,12 @@
+{
+  "name": "react-form-validation-hook",
+  "version": "0.1.0",
+  "description": "React Custom hook library for validating react forms.",
+  "scripts": {},
+  "dependencies": {
+    "dayjs": "^1.8.35",
+    "react": "^16.13.1",
+    "rxjs": "^6.6.2"
+  },
+  "devDependencies": {}
+}
