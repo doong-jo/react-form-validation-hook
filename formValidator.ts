@@ -366,16 +366,6 @@ class FormValidator {
 
 export const validator = new FormValidator();
 
-export function useFormValidator(afterAction: AFTER_ACTION) {
-  useEffect(() => {
-    validator.configure(afterAction);
-
-    return () => {
-      validator.clear();
-    };
-  }, [afterAction]);
-}
-
 export const getRef = validator.getRef.bind(validator);
 
 export const watch = validator.watch.bind(validator);
