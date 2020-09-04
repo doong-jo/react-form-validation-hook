@@ -1,12 +1,11 @@
-import { useEffect } from 'react';
-import { AFTER_ACTION, validator } from './formValidator';
+import { ConfigureOptionType } from './types';
 
-export function useFormValidator(afterAction: AFTER_ACTION) {
+export function useFormValidator(configureOptions?: ConfigureOptionType) {
   useEffect(() => {
-    validator.configure(afterAction);
+    validator.configure(configureOptions || {});
 
     return () => {
       validator.clear();
     };
-  }, [afterAction]);
+  }, [configureOptions]);
 }

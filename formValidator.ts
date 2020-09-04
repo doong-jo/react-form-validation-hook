@@ -1,7 +1,9 @@
-import { RefObject, useEffect } from 'react';
+import { RefObject } from 'react';
 import dayjs from 'dayjs';
 import { fromEvent, Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
+
+import { AFTER_ACTION, ConfigureOptionType } from './types';
 
 type ValidOptionsType = Partial<{
   minLength: number;
@@ -21,6 +23,7 @@ type ValidOptionsType = Partial<{
 interface RegisterOptionType extends ValidOptionsType {
   name: string;
   watchEvent?: string;
+  debounceTime?: number;
 }
 
 interface FieldType extends HTMLElement {
@@ -42,10 +45,6 @@ interface ValidationResultType {
   [key: string]: { invalid: boolean; ref: RefObject<FieldType>; order: number };
 }
 
-export enum AFTER_ACTION {
-  SCROLL_TO_FIELD_OR_LABEL = 'SCROLL_TO_FIELD_OR_LABEL',
-}
-
 class FormValidator {
   action: AFTER_ACTION = AFTER_ACTION.SCROLL_TO_FIELD_OR_LABEL;
 
@@ -59,15 +58,23 @@ class FormValidator {
 
   eventSubscriptions: Subscription[] = [];
 
+  defaultDebounceTime = 200;
+
   FormValidator() {
     this.isConfigure = false;
   }
 
-  configure(afterAction: AFTER_ACTION) {
+  // 초기 설정
+  configure({
+    afterAction = AFTER_ACTION.SCROLL_TO_FIELD_OR_LABEL,
+    defaultDebounceTime = this.defaultDebounceTime,
+  }: ConfigureOptionType) {
     this.action = afterAction;
+    this.defaultDebounceTime = defaultDebounceTime;
     this.isConfigure = true;
   }
 
+  // (컴포넌트 umonut) 제거 시 필수로 호출 필요
   clear() {
     this.eventSubscriptions.forEach((subscription) => {
       subscription.unsubscribe();
@@ -79,6 +86,7 @@ class FormValidator {
     this.eventSubscriptions = [];
   }
 
+  // invalid field로 스크롤 이동
   private scrollToInvalidField(ref: FieldType | null) {
     if (ref) {
       const label = ref.parentElement?.querySelector('label');
@@ -93,6 +101,7 @@ class FormValidator {
     }
   }
 
+  // 저장된 field를 모두 validation 수행
   validateForm() {
     const validationResults: {
       invalid: boolean;
@@ -114,13 +123,15 @@ class FormValidator {
       }
     });
 
+    // 모든 유효성 검사를 통과했는지 여부
     const isValidForm = validationResults.every(
       (validResult) => !validResult.invalid
     );
     if (!isValidForm) {
+      // invalid된 첫번째 필드 탐색
       const firstInvalidRef: FieldType = validationResults
-        .sort((a, b) => a.order - b.order)
-        .filter(({ invalid }) => invalid)[0].ref;
+        .filter(({ invalid }) => invalid)
+        .sort((a, b) => a.order - b.order)[0].ref;
 
       switch (this.action) {
         case AFTER_ACTION.SCROLL_TO_FIELD_OR_LABEL: {
@@ -136,7 +147,12 @@ class FormValidator {
     options: RegisterOptionType,
     invalidCallback: (draftInvalidValue: boolean) => void
   ) {
-    const { name, watchEvent, ...validateOptions } = options;
+    const {
+      name,
+      watchEvent,
+      debounceTime: draftDebounceTime,
+      ...validateOptions
+    } = options;
 
     // any => Various HTML ELEMENT
     return (ref: any) => {
@@ -152,11 +168,21 @@ class FormValidator {
           order: this.fieldOrderCount,
         };
 
+        let targetDebounceTime = this.defaultDebounceTime;
+
+        if (draftDebounceTime !== undefined) {
+          targetDebounceTime = draftDebounceTime;
+        }
+
+        // 지정한 이벤트 리스너 삽입하고 이를 구독
         if (watchEvent) {
           const event = fromEvent(this.fieldRefMap[name].ref, watchEvent);
-          const subscription = event.pipe(debounceTime(200)).subscribe(() => {
-            this.watch(name);
-          });
+          const subscription = event
+            .pipe(debounceTime(targetDebounceTime))
+            .subscribe(() => {
+              // 이벤트가 발생하면 validation 검사 수행
+              this.watch(name);
+            });
           this.eventSubscriptions.push(subscription);
         }
 
@@ -165,6 +191,7 @@ class FormValidator {
     };
   }
 
+  // 이름으로 ref(Field DOM) 을 반환
   getRef(name: string) {
     if (this.fieldRefMap.hasOwnProperty(name)) {
       return this.fieldRefMap[name].ref;
@@ -173,6 +200,7 @@ class FormValidator {
     return null;
   }
 
+  // <Select> 태그에 대한 validate
   private validateSelect(target: string, validateOptions: ValidOptionsType) {
     return this.validateField(
       validateOptions,
@@ -187,6 +215,7 @@ class FormValidator {
     );
   }
 
+  // string을 가지는 필드(input, textarea)에 대한 validate
   private validateString(target: string, validateOptions: ValidOptionsType) {
     return this.validateField(
       validateOptions,
@@ -240,6 +269,7 @@ class FormValidator {
     );
   }
 
+  // 필드 validate 수행
   private validateField(
     validateOptions: ValidOptionsType,
     validateCallback: (validateType: string, validateValue: any) => boolean
@@ -255,6 +285,7 @@ class FormValidator {
     return validations.every((v) => v);
   }
 
+  // validate 수행을 시작하며 각 Field의 특성에 따라 분기하여 처리한다
   validate(nodeName: string, fieldRef: FieldRefs) {
     function getValueFromFormElement(nodeName: string, fieldRef: FieldRefs) {
       let targetValue = '';
@@ -291,6 +322,7 @@ class FormValidator {
     return false;
   }
 
+  // name으로 해당 field를 찾고 validation 결과를 반환
   private validateByName(name: string) {
     const findField = this.fieldRefMap[name];
 
@@ -303,6 +335,7 @@ class FormValidator {
     return false;
   }
 
+  // validation 결과로 invalid 표시를 할 수 있도록 diaptch 콜백을 호출
   watch(name: string) {
     const isValidField = this.validateByName(name);
     this.fieldRefMap[name].invalidCallback(isValidField);
@@ -369,4 +402,17 @@ export const validator = new FormValidator();
 export const getRef = validator.getRef.bind(validator);
 
 export const watch = validator.watch.bind(validator);
-1;
+
+export const register = validator.register.bind(validator);
+
+export const validateForm = validator.validateForm.bind(validator);
+
+export default {
+  getRef,
+  watch,
+  register,
+  validateForm,
+  useFormValidator,
+  validator,
+  AFTER_ACTION,
+};
