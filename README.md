@@ -21,6 +21,7 @@ Validate fields used in form.
    }
 
   <form>
+   // simple case
     <input
         ref={register(
           {
@@ -34,6 +35,7 @@ Validate fields used in form.
         )}
     />
 
+   // additional case
     <input
         ref={register(
           {
