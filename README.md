@@ -1,4 +1,5 @@
 # react-form-validation-hook
+[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/doong-jo/react-form-validation-hook/blob/main/LICENSE) [![npm version](https://img.shields.io/npm/v/react-form-validation-hook.svg?style=flat)](https://www.npmjs.com/package/react-form-validation-hook)
 
 React Custom hook library for validating react forms
 
