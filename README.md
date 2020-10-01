@@ -6,7 +6,6 @@ Validate fields used in form.
 
 ```typescript
  import { register, useFormValidator, validateForm, AFTER_ACTION } from './formValidator';
- import MyInput from './MyInput';
 
   const VALIDATOR_CONFIGS = {
     afterAction: AFTER_ACTION.SCROLL_TO_FIELD_OR_LABEL,
@@ -22,6 +21,7 @@ Validate fields used in form.
    }
 
   <form>
+   // simple case
     <input
         ref={register(
           {
@@ -35,6 +35,7 @@ Validate fields used in form.
         )}
     />
 
+   // additional case
     <input
         ref={register(
           {
