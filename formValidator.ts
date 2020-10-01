@@ -109,7 +109,7 @@ class FormValidator {
       order: number;
     }[] = [];
 
-    Object.values(this.fieldRefMap).forEach((fieldRef) => {
+    Object.values(this.fieldRefMap).forEach((fieldRef: FieldRefs) => {
       if (fieldRef.ref !== null) {
         const { nodeName } = fieldRef.ref;
 
@@ -297,8 +297,7 @@ class FormValidator {
         const { selectedOptions } = fieldRef.ref;
 
         if (selectedOptions) {
-          const [{ value }] = selectedOptions;
-          targetValue = value;
+          targetValue = selectedOptions[0].value;
         }
       }
 
@@ -412,7 +411,6 @@ export default {
   watch,
   register,
   validateForm,
-  useFormValidator,
   validator,
   AFTER_ACTION,
 };

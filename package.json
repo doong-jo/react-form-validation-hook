@@ -1,13 +1,24 @@
 {
   "name": "react-form-validation-hook",
   "version": "0.1.0",
-  "main": "index.ts",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "keywords": [
+    "react",
+    "form",
+    "validation"
+  ],
   "description": "React Custom hook library for validating react forms.",
-  "scripts": {},
+  "scripts": {
+    "build": "tsc"
+  },
+  "bugs": "https://github.com/doong-jo/react-form-validation-hook/issues",
   "dependencies": {
     "dayjs": "^1.8.35",
     "react": "^16.13.1",
     "rxjs": "^6.6.2"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@types/react": "^16.9.49"
+  }
 }
